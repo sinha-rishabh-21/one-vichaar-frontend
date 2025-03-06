@@ -3,11 +3,8 @@ import { useEffect, useRef } from "react";
 import Quill from "quill";
 import QuillCursors from "quill-cursors";
 import * as YJS from "yjs";
-//import { WebrtcProvider } from "y-webrtc";
 import {WebsocketProvider} from "y-websocket";
 import { QuillBinding } from "y-quill";
-//import ws from "ws";
-//import useSocket from "./utils/useSocket";
 import "quill/dist/quill.snow.css";
 
 Quill.register("modules/cursors", QuillCursors);
