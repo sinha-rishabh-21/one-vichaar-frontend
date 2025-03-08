@@ -3,16 +3,16 @@ import { useEffect, useRef } from "react";
 import Quill from "quill";
 import QuillCursors from "quill-cursors";
 import * as YJS from "yjs";
-import {WebsocketProvider} from "y-websocket";
+import { WebsocketProvider } from "y-websocket";
 import { QuillBinding } from "y-quill";
 import "quill/dist/quill.snow.css";
 
+// Register Quill Cursors module
 Quill.register("modules/cursors", QuillCursors);
-
 
 const getRandomColor = () => {
   const colors = [
-    "#FF5733", 
+    "#FF5733",
     "#33FF57",
     "#3357FF",
     "#FF33A1",
@@ -21,15 +21,16 @@ const getRandomColor = () => {
     "#FFC300",
     "#C70039",
   ];
-  return colors[Math.floor(Math.random()*colors.length)];
+  return colors[Math.floor(Math.random() * colors.length)];
 };
 
-const CollaborativeEditor = () => {
+interface CollaborativeEditorProps {
+  id: string,
+}
+
+const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ id }) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const quillInstance = useRef<Quill | null>(null);
-  //const socket = useSocket();
-  //const providerRef = useRef<WebrtcProvider | null>(null);
-  //const ydocRef = useRef<YJS.Doc | null>(null);
 
   useEffect(() => {
     if (editorRef.current && !quillInstance.current) {
@@ -55,8 +56,8 @@ const CollaborativeEditor = () => {
       // Initialize YJS
       const ydoc = new YJS.Doc();
       const provider = new WebsocketProvider(
-        "ws://localhost:8000",
-        "CollabRoom",
+        "ws://192.168.29.237:8000", // Change this to your WebSocket URL
+        id,
         ydoc
       );
       const ytext = ydoc.getText("quill");
@@ -65,7 +66,6 @@ const CollaborativeEditor = () => {
       new QuillBinding(ytext, quill, provider.awareness);
 
       // Assign a unique color to each user
-      //const userColor = getRandomColor();
       provider.awareness.setLocalStateField("user", {
         name: `User-${Math.floor(Math.random() * 1000)}`, // Random user ID
         color: getRandomColor(),
@@ -80,13 +80,11 @@ const CollaborativeEditor = () => {
       return () => {
         window.removeEventListener("blur", handleBlur);
         editorRef.current = null;
-        //provider.disconnect();
-        //ydoc.destroy();
       };
     }
-  }, []);
+  }, [id]);
 
-  return <div ref={editorRef} id="editor" style={{ height: "400px" }}/>;
+  return <div ref={editorRef} id="editor" style={{ height: "400px" }} />;
 };
 
 export default CollaborativeEditor;
