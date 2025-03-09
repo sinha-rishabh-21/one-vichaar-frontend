@@ -1,20 +1,18 @@
 "use client";
-import { nanoid } from "nanoid";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation"; // ✅ Use useRouter()
+//import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const Home = () => {
-  const router = useRouter(); // ✅ Initialize router
-
-  function redirectToNewDocument() {
-    const newId = nanoid(16);
-    router.push(`/docs/${newId}`); // ✅ Client-side navigation
-  }
-
+  //const router = useRouter();
   return (
-    <div>
-      This is the home page.
-      <Button onClick={redirectToNewDocument}>Generate new ID</Button>
+    <div className="flex justify-center items-center h-[700px] gap-5">
+      <Link href="/login" prefetch={false}>
+        <Button>Login</Button>
+      </Link>
+      <Link href="/register" prefetch={false}>
+        <Button>Register</Button>
+      </Link>
     </div>
   );
 };
