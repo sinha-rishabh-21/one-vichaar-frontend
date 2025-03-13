@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, SquareArrowOutUpRight } from "lucide-react";
+import { PlusIcon, SquareArrowOutUpRight, Trash2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 //import getToken from "@/components/utils/getToken";
 import {
   Dialog,
@@ -17,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface DocListProps {
   name: string;
@@ -29,9 +37,33 @@ const Dashboard = () => {
   const [docList, setDocList] = useState<DocListProps[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [docName, setDocName] = useState<string>("");
-
+  const [IsChanged, setIsChanged] = useState<boolean>(false);
   const handlerDocClick = (docID: string) => () => {
     router.push(`/docs/${docID}`);
+  };
+
+  const handlerDocDelete = (docId: string) => {
+    if (!token) return;
+    axios
+      .delete(`${process.env.NEXT_PUBLIC_SERVER}/deleteDoc/${docId}`, {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        console.log(res);
+        setIsChanged(!IsChanged);
+      })
+      .catch((err) => {
+        toast.error("Unable to Delete. Try Again!", {
+          action: {
+            label: "Close",
+            onClick: () => toast.dismiss(),
+          },
+        });
+        console.log(err);
+      });
   };
 
   async function redirectToNewDocument() {
@@ -39,7 +71,7 @@ const Dashboard = () => {
     const newId = nanoid(16);
     await axios
       .put(
-        "http://localhost:8000/saveDoc",
+        `${process.env.NEXT_PUBLIC_SERVER}/saveDoc`,
         {
           docID: newId,
           docName: docName,
@@ -56,6 +88,12 @@ const Dashboard = () => {
         router.push(`/docs/${newId}`);
       })
       .catch((err) => {
+        toast.error("Unexpected Error. Try Again!", {
+          action: {
+            label: "Close",
+            onClick: () => toast.dismiss(),
+          },
+        });
         console.log(err);
       });
   }
@@ -64,13 +102,21 @@ const Dashboard = () => {
     axios
       .get("/api/get-token", { withCredentials: true })
       .then((res) => setToken(res.data.token))
-      .catch((err) => console.error("Error fetching token:", err));
+      .catch((err) => {
+        toast.error("Unable to Authenticate", {
+          action: {
+            label: "Close",
+            onClick: () => toast.dismiss(),
+          },
+        });
+        console.log("Error fetching token:", err);
+      });
   }, []);
 
   useEffect(() => {
     if (!token) return;
     axios
-      .get("http://localhost:8000/listDocs", {
+      .get(`${process.env.NEXT_PUBLIC_SERVER}/listDocs`, {
         withCredentials: true,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,23 +127,37 @@ const Dashboard = () => {
         setDocList(res.data);
       })
       .catch((err) => {
+        toast.error("Unable to fetch List. Try Again!", {
+          action: {
+            label: "Close",
+            onClick: () => toast.dismiss(),
+          },
+        });
         console.log(err);
       });
-  }, [token]);
+  }, [token, IsChanged]);
   return (
-    <div className="bg-white m-10 p-10 h-[800px] w-[95%] rounded-lg">
+    <div className="bg-[hsl(var(--card))] m-10 p-10 min-h-[600px] w-[95%] rounded-lg">
       <div className="flex justify-end m-4">
         {/* <Button onClick={redirectToNewDocument}>
           Create New Doc
           <PlusIcon />
         </Button> */}
         <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              Create a new Doc
-              <PlusIcon />
-            </Button>
-          </DialogTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusIcon />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create a new Doc</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Enter a name</DialogTitle>
@@ -121,7 +181,11 @@ const Dashboard = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={redirectToNewDocument}>
+              <Button
+                type="submit"
+                onClick={redirectToNewDocument}
+                className=""
+              >
                 Create New Doc
               </Button>
             </DialogFooter>
@@ -133,12 +197,46 @@ const Dashboard = () => {
           return (
             <div
               key={doc._id}
-              className="flex p-2 items-center justify-between mx-16 shadow-inner bg-gray-100 rounded-lg"
+              className="flex p-2 items-center justify-between mx-16 shadow-inner bg-[hsl(var(--background))] rounded-lg"
             >
               {doc.name}
-              <Button onClick={handlerDocClick(doc.docID)} className="ml-2">
-                Goto This Doc <SquareArrowOutUpRight />
-              </Button>
+              <div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handlerDocClick(doc.docID)}
+                        className="ml-2"
+                      >
+                        {" "}
+                        <SquareArrowOutUpRight />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p> Goto This Doc</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlerDocDelete(doc.docID);
+                        }}
+                        className="ml-2"
+                      >
+                        {" "}
+                        <Trash2 />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p> Delete </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
           );
         })}

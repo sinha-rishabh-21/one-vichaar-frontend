@@ -25,7 +25,7 @@ const getRandomColor = () => {
 };
 
 interface CollaborativeEditorProps {
-  id: string,
+  id: string;
 }
 
 const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ id }) => {
@@ -56,7 +56,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ id }) => {
       // Initialize YJS
       const ydoc = new YJS.Doc();
       const provider = new WebsocketProvider(
-        "ws://192.168.29.237:8000", // Change this to your WebSocket URL
+        `${process.env.NEXT_PUBLIC_WEBSOCKET}`, // Change this to your WebSocket URL
         id,
         ydoc
       );

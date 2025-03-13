@@ -12,12 +12,14 @@ const Home = ({ params }: { params: Promise<{ id: string }> }) => {
     const fetchId = async () => {
       const { id } = await params;
       setId(id);
-    }
+    };
     fetchId();
   }, [params]);
   return (
-    <div>
-      {id ? <CollaborativeEditor id={id} /> : <p>Loading...</p>}
+    <div className="p-10">
+      <div className="bg-[hsl(var(--card))] shadow-xl">
+        {id ? <CollaborativeEditor id={id} /> : <p>Loading...</p>}
+      </div>
     </div>
   );
 };

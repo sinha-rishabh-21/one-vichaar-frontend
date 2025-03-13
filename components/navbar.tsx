@@ -1,29 +1,36 @@
 "use client";
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoonStar, Sun, Copy } from "lucide-react";
-// import { io } from 'socket.io-client';
-
-// const socket = io("http://localhost:3001", {
-//   transports: ["websocket"], // Use WebSocket transport
-//   reconnection: true,
-// });
+import { MoonStar, Sun, Copy, Delete } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import checkURL from "./utils/checkURL";
+import { usePathname } from "next/navigation";
+import axios from "axios";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [isDocsPage, setIsDocsPage] = useState<boolean>(false);
+  const [token, setToken] = useState<string | null>(null); // Ensure token is nullable
+  const pathname = usePathname();
+  const [copied, setCopied] = useState<boolean>(false);
 
-  //const [text, setText] = useState<string>('');
-
-  // useEffect(() =>{
-  //     socket.on("document", (data: string) => {
-  //       setText(data);
-  //     });
-  //     return () => {
-  //       socket.off("document"); // Clean up event listener
-  //     };
-  // },[])
+  useEffect(() => {
+    axios
+      .get("/api/get-token", { withCredentials: true })
+      .then((res) => setToken(res.data.token || null))
+      .catch((err) => {
+        console.error("Error fetching token:", err);
+        setToken(null);
+      });
+  }, [pathname]);
 
   useEffect(() => {
     // Check user preference from localStorage
@@ -33,6 +40,10 @@ const Navbar = () => {
       setDarkMode(true);
     }
   }, []);
+
+  useEffect(() => {
+    setIsDocsPage(checkURL(pathname));
+  }, [pathname]);
 
   const toggleTheme = () => {
     if (darkMode) {
@@ -44,26 +55,79 @@ const Navbar = () => {
     }
     setDarkMode(!darkMode);
   };
-  //const textToCopy = "https://google.com/";
-  // const [copied, setCopied] = useState<boolean>(false);
-  // const copyToClipboard = async () => {
-  //   try {
-  //     await navigator.clipboard.writeText(textToCopy);
-  //     setCopied(true);
-  //     setTimeout(() => setCopied(false), 2000); // Reset after 2 sec
-  //   } catch (err) {
-  //     console.error("Failed to copy!", err);
-  //   }
-  // };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    });
+  };
+
   return (
-    <div className="h-16 flex items-center px-10 justify-end gap-x-5 shadow-sm bg-white dark:bg-gray-500">
-      <Input className="w-64" type="text" readOnly />
-      <Button className="">
-        <Copy size={18} />
-      </Button>
-      <Button className="" onClick={toggleTheme}>
-        {darkMode ? <Sun size={18} /> : <MoonStar size={18} />}
-      </Button>
+    <div className="bg-[hsl(var(--navbar-bg))] h-16 flex items-center px-10 justify-end gap-x-5 shadow-sm">
+      <div>
+        <div className="h-3" />
+        <Link href={"/"}>
+          <Image
+            alt=""
+            src={`${
+              !darkMode ? "/one-vichaar-black.svg" : "/one-vichaar-white.svg"
+            }`}
+            width={200}
+            height={10}
+          />
+        </Link>
+      </div>
+      <div className="flex-grow"></div>
+      {isDocsPage && (
+        <div className="flex items-center gap-x-2">
+          <Input className="w-64" type="text" value={document.URL} readOnly />
+          {copied ? (
+            "copied"
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={copyToClipboard}>
+                    <Copy size={18} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy Link</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      )}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={toggleTheme}>
+              {darkMode ? <Sun size={18} /> : <MoonStar size={18} />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Toggle Dark Mode</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      {token && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/logout">
+                <Button>
+                  <Delete />
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Logout</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 };
