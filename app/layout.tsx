@@ -26,7 +26,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "One Vichaar - Home",
+  title: "One Vichaar",
   description: "One Vichaar - Home",
 };
 

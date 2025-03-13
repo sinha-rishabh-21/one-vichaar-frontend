@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoonStar, Sun, Copy, Delete } from "lucide-react";
+import { MoonStar, Sun, Copy, Delete, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import checkURL from "./utils/checkURL";
@@ -112,6 +112,22 @@ const Navbar = () => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+      {token && !pathname.split("/").includes("dashboard") && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/dashboard">
+                <Button>
+                  <User />
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Dashboard</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       {token && (
         <TooltipProvider>
           <Tooltip>
